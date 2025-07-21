@@ -109,7 +109,7 @@ def _least_squares_intersection(
     return point_3d
 
 
-def run_spatial_intersection(data: SpatialIntersectionData) -> npt.NDArray[np.float64]:
+def run_spatial_intersection(data: SpatialIntersectionData) -> Tuple[npt.NDArray[np.float64], dict[int, int]]:
     """
     Run spatial intersection on all points in the dataset.
     
@@ -119,7 +119,9 @@ def run_spatial_intersection(data: SpatialIntersectionData) -> npt.NDArray[np.fl
         data: SpatialIntersectionData containing camera poses and observations
         
     Returns:
-        3D points array of shape (N, 3) where N is the number of unique points
+        Tuple of:
+            - 3D points array of shape (N, 3) where N is the number of unique points
+            - dense_index_mapping: dict mapping original point indices to dense indices (0..N-1)
         
     Raises:
         ValueError: If data is invalid or no valid triangulations possible
@@ -141,6 +143,9 @@ def run_spatial_intersection(data: SpatialIntersectionData) -> npt.NDArray[np.fl
     num_points = len(unique_point_indices)
     
     print(f"Triangulating {num_points} points from {len(data.points_2d)} observations")
+    
+    # Mapping from original point index to dense index
+    dense_index_mapping = {orig_idx: dense_idx for dense_idx, orig_idx in enumerate(unique_point_indices)}
     
     # Initialize results array
     points_3d = np.zeros((num_points, 3))
@@ -179,7 +184,7 @@ def run_spatial_intersection(data: SpatialIntersectionData) -> npt.NDArray[np.fl
     
     print(f"Successfully triangulated {successful_triangulations}/{num_points} points")
     
-    return points_3d
+    return points_3d, dense_index_mapping
 
 
 def compute_triangulation_quality(
